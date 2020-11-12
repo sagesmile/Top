@@ -34,13 +34,22 @@ public class HttpUtil {
      * @return
      * @throws Exception
      */
-    public static String get(String urlStr, Map<String, String> paramMap,HttpURLConnection conn) throws Exception{
+    public static HttpURLConnection getConn(String urlStr, Map<String, String> paramMap,HttpURLConnection conn) {
         urlStr = urlStr + "?" + getParamString(paramMap);
-        try{
+        System.out.println(urlStr);
+        try {
             //创建URL对象
             URL url = new URL(urlStr);
             //获取URL连接
             conn = (HttpURLConnection) url.openConnection();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        return conn;
+    }
+    public static String get(HttpURLConnection conn) throws Exception{
+
+        try {
             //设置通用的请求属性
             setHttpUrlConnection(conn, GET);
             //建立实际的连接
@@ -56,20 +65,25 @@ public class HttpUtil {
      * 模拟Http Post请求
      * @param urlStr
      *             请求路径
-     * @param paramMap
-     *             请求参数
      * @return
      * @throws Exception
      */
-    public static String post(String urlStr, Map<String, String> paramMap,HttpURLConnection conn) throws Exception{
+    public static HttpURLConnection postConn(String urlStr,HttpURLConnection conn) throws Exception {
+        //创建URL对象
+        URL url = new URL(urlStr);
+
+        //获取URL连接
+        conn = (HttpURLConnection) url.openConnection();
+
+        return conn;
+    }
+
+    public static String post( Map<String, String> paramMap,HttpURLConnection conn) throws Exception{
+
         PrintWriter writer = null;
-        try{
-            //创建URL对象
-            URL url = new URL(urlStr);
-            //获取请求参数
-            String param = getParamString(paramMap);
-            //获取URL连接
-            conn = (HttpURLConnection) url.openConnection();
+        //获取请求参数
+        String param = getParamString(paramMap);
+            try{
             //设置通用请求属性
             setHttpUrlConnection(conn, POST);
             //建立实际的连接
@@ -121,9 +135,11 @@ public class HttpUtil {
     private static void setHttpUrlConnection(HttpURLConnection conn, String requestMethod) throws ProtocolException{
         conn.setRequestMethod(requestMethod);
         conn.setRequestProperty("accept", "*/*");
-        conn.setRequestProperty("Accept-Language", "zh-CN");
-        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)");
+        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat");
         conn.setRequestProperty("Proxy-Connection", "Keep-Alive");
+//        conn.setRequestProperty("Referer","https://servicewechat.com/wx71a6af1f91734f18/21/page-frame.html");
+        conn.setRequestProperty("Accept-Encoding","gzip, deflate, br");
+        conn.setRequestProperty("content-type","application/json");
         if(null!=requestMethod && POST.equals(requestMethod)){
             conn.setDoOutput(true);
             conn.setDoInput(true);
@@ -146,4 +162,5 @@ public class HttpUtil {
         }
         return builder.deleteCharAt(0).toString();
     }
+
 }
