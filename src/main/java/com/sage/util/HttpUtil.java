@@ -1,5 +1,14 @@
 package com.sage.util;
 
+import com.alibaba.fastjson.JSONObject;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -59,41 +68,40 @@ public class HttpUtil {
         }
     }
 
-    /**
-     * 模拟Http Post请求
-     * @param urlStr
-     *             请求路径
-     * @return
-     * @throws Exception
-     */
-    public static String post(String urlStr, Map<String, String> paramMap) throws Exception{
-        HttpURLConnection conn = null;
-        PrintWriter writer = null;
-        try{
-            //创建URL对象
-            URL url = new URL(urlStr);
-            //获取请求参数
-            String param = getParamString(paramMap);
-            //获取URL连接
-            conn = (HttpURLConnection) url.openConnection();
-            //设置通用请求属性
-            setHttpUrlConnection(conn, POST);
-            //建立实际的连接
-            conn.connect();
-            //将请求参数写入请求字符流中
-            writer = new PrintWriter(conn.getOutputStream());
-            writer.print(param);
-            writer.flush();
-            //读取响应的内容
-            return readResponseContent(conn.getInputStream());
-        }finally{
-            if(null!=conn) {
-                conn.disconnect();
-            }
-            if(null!=writer){
-                writer.close();
-            }
+
+    public static String send(String url, JSONObject jsonObject) throws Exception{
+
+        CloseableHttpClient client = HttpClients.createDefault();
+        String body = "";
+
+
+        //创建post方式请求对象
+        HttpPost httpPost = new HttpPost(url);
+
+        //装填参数
+        StringEntity s = new StringEntity(jsonObject.toString(), "utf-8");
+        //设置参数到请求对象中
+        httpPost.setEntity(s);
+        //设置header信息
+        httpPost.setHeader(":Host","wxmall.topsports.com.cn");
+        httpPost.setHeader("AutAuthorization","Bearer 1cde3a06-ee98-4883-99dd-5b3cf2ffd0bc");
+        httpPost.setHeader("Accept-Encoding","gzip, deflate, br");
+        httpPost.setHeader("content-type","application/json");
+        httpPost.setHeader("Connection","eep-alive");
+        httpPost.setHeader("Referer","https://servicewechat.com/wx71a6af1f91734f18/22/page-frame.html");
+        httpPost.setHeader("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat");
+        //执行请求操作，并拿到结果（同步阻塞）
+        CloseableHttpResponse response = client.execute(httpPost);
+        //获取结果实体
+        HttpEntity entity = response.getEntity();
+        if (entity != null) {
+            //按指定编码转换结果实体为String类型
+            body = EntityUtils.toString(entity, "utf-8");
         }
+        EntityUtils.consume(entity);
+        //释放链接
+        response.close();
+        return body;
     }
 
     /**

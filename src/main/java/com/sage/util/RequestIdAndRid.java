@@ -8,35 +8,22 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import com.alibaba.fastjson.JSONObject;
-import java.util.HashMap;
-import java.util.Map;
+
+import java.util.*;
 
 import static com.sage.util.HttpUtil.getParamString;
 
 public class RequestIdAndRid {
-    public static void main(String[] args) {
-        try {
-            String body = code();
-            Map<String, String> rid = getRid(body);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+
+    public static void main(String[] args) throws Exception{
+        String code = code();
+
     }
-
-
-    private static Map<String,String> getRid(String body){
-        String requestId = (String) JSONObject.parseObject(body).get("requestId");
-        String rid = (String) ((JSONObject) JSONObject.parseObject(body).get("detail")).get("rid");
-        HashMap<String, String> map = new HashMap<>();
-        map.put(requestId,rid);
-        return map;
-    }
-
 
 
     public static String code() throws Exception {
         String urlStr = "https://captcha.fengkongcloud.com/ca/v1/register";
-        String result = null;
         Map<String, String> map = new HashMap<>();
         map.put("organization", "iqYCUCVctYQ6OmmJwarX");
         map.put("appId", "default");
@@ -71,6 +58,14 @@ public class RequestIdAndRid {
         EntityUtils.consume(entity);
         //释放链接
         response.close();
-        return body;
+
+        System.out.println(body);
+        String rid = (String) ((JSONObject) JSONObject.parseObject(body).get("detail")).get("rid");
+//        list.add(requestId);
+//        list.add(rid);
+        return rid;
     }
+
+
+
 }
