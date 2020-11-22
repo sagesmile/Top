@@ -11,17 +11,23 @@ import org.apache.http.util.EntityUtils;
 
 import java.util.ArrayList;
 
+/**
+ * 提交工具类
+ */
 public class Commit {
+
+    public static int temp = 0;
     public static String send(JSONObject jsonObject) throws Exception{
 
         ArrayList<String> list = new ArrayList<>();
-        list.add("202011151644562694982f2edcadc2e9");
-        list.add("202011151645007bffe07007721d30db");
-        list.add("2020111516450332659ffd0fbb849639");
-        list.add("2020111516450712a94edb87f043de59");
+        list.add("2020111620395774bf2af5cbe3b534d2");
+        list.add("202011162040172d8df76f07c2ad34fd");
+        list.add("20201116204028a5f8f9442904deb7cd");
+        list.add("20201116204044a1829f3625d5c0b473");
+        list.add("20201116204054a39dff587f97977f6b");
 
         String url = "https://wxmall.topsports.com.cn/order/create";
-        jsonObject.put("rid",list.get(0));
+        jsonObject.put("rid",list.get(temp));
         String body = "";
         //创建post方式请求对象
 
@@ -35,7 +41,7 @@ public class Commit {
         //设置header信息
         httpPost.setHeader(":Host","wxmall.topsports.com.cn");
         httpPost.setHeader("Connection","keep-alive");
-        httpPost.setHeader("Authorization","8bb8417a-f316-42de-a706-6852a4a2f335");
+        httpPost.setHeader("Authorization","324e36fd-c5bc-4460-894f-e1825e9e20fe");
         httpPost.setHeader("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat");
         httpPost.setHeader("Referer", "https://servicewechat.com/wx71a6af1f91734f18/22/page-frame.html");
         httpPost.setHeader("Accept-Encoding","gzip, deflate, br");
@@ -43,7 +49,6 @@ public class Commit {
         httpPost.setHeader("Accept-Language","zh-cn");
         //执行请求操作，并拿到结果（同步阻塞）
         CloseableHttpResponse response = client.execute(httpPost);
-        list.remove(0);
         //获取结果实体
         HttpEntity entity = response.getEntity();
         if (entity != null) {
@@ -51,6 +56,7 @@ public class Commit {
             body = EntityUtils.toString(entity, "utf-8");
         }
         EntityUtils.consume(entity);
+        temp+=1;
         //释放链接
         response.close();
         System.out.println(body);

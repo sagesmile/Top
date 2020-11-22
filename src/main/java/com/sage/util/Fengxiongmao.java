@@ -2,6 +2,7 @@ package com.sage.util;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -9,45 +10,51 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.HttpURLConnection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.sage.util.HttpUtil.getParamString;
+public class Fengxiongmao {
 
-public class Commodity {
+    private static int temp = 0;
 
-    public static int temp = 0;
+
+
 
     public static void main(String[] args){
+
+        Fengxiongmao fengxiongmao = new Fengxiongmao();
         ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
-//        try {
-//            while(true){
-//                String search = search("554724-073");
-//                List<String> idList = commodityIdList(search);
-//                for(String id: idList){
-//                    commodityDetail(cachedThreadPool,id);
-//                }
-//                Thread.sleep(1000);
-//            }
-//        }catch (Exception e){
-//            e.printStackTrace();
-//        }
+        try {
+            while(true){
+                String search = fengxiongmao.search("555088-105");//555088-105
+                List<String> idList = fengxiongmao.commodityIdList(search);
+                for(String id: idList){
+                    fengxiongmao.commodityDetail(cachedThreadPool,id);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 //        while (true){
 //            try {
-//                commodityDetail("9872e1e5ed3d466087b0583afab083dc");
+//                String detail =fengxiongmao.commodityDetail("900b63140fa847a193185c53fac8e4a1");
 //            } catch (Exception e) {
 //                e.printStackTrace();
 //            }
 //        }
+
     }
 
 
 
-    private static String search(String keyword) throws Exception{
+    private  String search(String keyword) throws Exception{
         String url = "https://wxmall.topsports.com.cn/search/shopCommodity/list";
         HashMap<String, String> map = new HashMap<>();
         map.put("searchKeyword",keyword);
@@ -56,13 +63,13 @@ public class Commodity {
         map.put("sortColumn","");
         map.put("sortType","asc");
         map.put("filterIds","");
-        map.put("shopNo","");
+        map.put("shopNo","NKCD94");
         HttpURLConnection conn = HttpUtil.getConn(url, map);
         String result = HttpUtil.get(conn);
         return result;
     }
 
-    private static List<String> commodityIdList(String searchResult){
+    private  List<String> commodityIdList(String searchResult){
         ArrayList<String> idList = new ArrayList<>();
         List list = (List<Object>)((JSONObject)((JSONObject)JSONObject.parseObject(searchResult).get("data")).get("spu")).get("list");
         for (int i = 0; i < list.size(); i++) {
@@ -73,7 +80,7 @@ public class Commodity {
         return idList;
     }
 
-    private static void commodityDetail(String id) throws Exception{
+    private  String commodityDetail(ExecutorService cachedThreadPool,String id) throws Exception{
         String url = "https://wxmall.topsports.com.cn/shopCommodity/queryShopCommodityDetail/" + id;
         HttpURLConnection conn = HttpUtil.getConn(url, null);
         String result = HttpUtil.get(conn);
@@ -90,6 +97,7 @@ public class Commodity {
                         jsonObject.put("rid","202011142240537246bafb0cdda8a37b");
                         JSONArray array = jsonObject.getJSONArray("subOrderList");
                         JSONObject subOrderList = (JSONObject) array.get(0);
+
                         subOrderList.put("shopNo",data.get("shopNo").toString());//设置店铺号
                         JSONArray arrayOne = subOrderList.getJSONArray("commodityList");
                         JSONObject commodityList = (JSONObject) arrayOne.get(0);
@@ -105,20 +113,34 @@ public class Commodity {
                         subOrderList.put("commodityList",arrayOne);
                         array.set(0,subOrderList);
                         jsonObject.put("subOrderList",array);
-                        send(jsonObject);
+                        cachedThreadPool.execute(()->{
+                            try {
+                                send(jsonObject);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
                     }
                 }
             }
         }
+        return result;
     }
 
-    public static String send(JSONObject jsonObject) throws Exception{
+
+
+
+    public String send(JSONObject jsonObject) throws Exception{
 
         ArrayList<String> list = new ArrayList<>();
-        list.add("2020112117365087b599885f4f62b2a3");
-        list.add("2020112117365464f79ad14661889791");
-        list.add("20201121173701cb44731636100fc5db");
-        list.add("20201121173707087c705d3a4e9a58e1");
+        list.add("202011202024348866c290c2cfacafe2");
+        list.add("2020112020243846e10b51a7abd7e5a7");
+        list.add("202011202024412b795d2694e33c8886");
+        list.add("202011202024459dbe2ea9fceb4b36d8");
+        list.add("20201120202448433e23591bcc99e96b");
+        list.add("2020112020245281192af34cd91247b2");
+        list.add("20201120194256e2df9ab6a7e08ec04b");
+        list.add("20201120194300e9bf222f70cc4a30c7");
 
         String url = "https://wxmall.topsports.com.cn/order/create";
         jsonObject.put("rid",list.get(temp));
@@ -143,6 +165,7 @@ public class Commodity {
         httpPost.setHeader("Accept-Language","zh-cn");
         //执行请求操作，并拿到结果（同步阻塞）
         CloseableHttpResponse response = client.execute(httpPost);
+        list.remove(0);
         //获取结果实体
         HttpEntity entity = response.getEntity();
         if (entity != null) {
@@ -150,12 +173,13 @@ public class Commodity {
             body = EntityUtils.toString(entity, "utf-8");
         }
         EntityUtils.consume(entity);
-        temp+=1;
         //释放链接
         response.close();
         System.out.println(body);
         return body;
     }
+
+
 
     private static String param = "{\n" +
             "    \"merchantNo\":\"TS\",\n" +
@@ -222,4 +246,5 @@ public class Commodity {
             "\n" +
             "    ]\n" +
             "}";
+
 }

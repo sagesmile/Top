@@ -1,71 +1,32 @@
 package com.sage.util;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-
-import com.alibaba.fastjson.JSONObject;
-
-import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.sage.util.HttpUtil.getParamString;
 
+/**
+ * 多线程测试
+ */
 public class RequestIdAndRid {
 
 
-    public static void main(String[] args) throws Exception{
-        String code = code();
+    public static void main(String[] args) {
 
-    }
-
-
-    public static String code() throws Exception {
-        String urlStr = "https://captcha.fengkongcloud.com/ca/v1/register";
-        Map<String, String> map = new HashMap<>();
-        map.put("organization", "iqYCUCVctYQ6OmmJwarX");
-        map.put("appId", "default");
-        map.put("channel", "DEFAULT");
-        map.put("lang", "zh-cn");
-        map.put("model", "slide");
-        map.put("rversion", "1.0.1");
-        map.put("sdkver", "1.1.1");
-        map.put("data", "%7B%7D");
-        map.put("callback", "sm_" + System.currentTimeMillis());
-        urlStr = urlStr + "?" + getParamString(map);
-        CloseableHttpClient client = HttpClients.createDefault();
-        HttpGet get = new HttpGet(urlStr);
-        get.setHeader("organization", "iqYCUCVctYQ6OmmJwarX");
-        get.setHeader("appId", "default");
-        get.setHeader("channel", "DEFAULT");
-        get.setHeader("lang", "zh-cn");
-        get.setHeader("model", "slide");
-        get.setHeader("rversion", "1.0.1");
-        get.setHeader("sdkver", "1.1.1");
-        get.setHeader("data", "%7B%7D");
-        get.setHeader("callback", "sm_" + System.currentTimeMillis());
-        CloseableHttpResponse response = client.execute(get);
-        //获取结果实体
-        HttpEntity entity = response.getEntity();
-        String body = null;
-        if (entity != null) {
-            //按指定编码转换结果实体为String类型
-            body = EntityUtils.toString(entity, "utf-8");
-            body = body.substring(17,body.length()-1);
+        RequestIdAndRid requestIdAndRid = new RequestIdAndRid();
+        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        for (int i = 0; i < 100; i++) {
+            requestIdAndRid.print(cachedThreadPool,i);
         }
-        EntityUtils.consume(entity);
-        //释放链接
-        response.close();
-
-        System.out.println(body);
-        String rid = (String) ((JSONObject) JSONObject.parseObject(body).get("detail")).get("rid");
-//        list.add(requestId);
-//        list.add(rid);
-        return rid;
     }
 
+    private  void print(ExecutorService cachedThreadPool,int d){
 
+        cachedThreadPool.execute(()->{
+            for (int i = 0; i < 100; i++) {
+                System.out.println(d+"----"+i);
+            }
+        });
+    }
 
 }
