@@ -24,19 +24,37 @@ public class Fengxiongmao {
 
     private static int temp = 0;
 
+    private static String list[] = {
+            "20201127160207b270dddc9f9fbf2fcf",
+            "20201127160211ea49d838675790b573",
+            "20201127160214ef5275671950d511f7",
+    };
+
 
 
 
     public static void main(String[] args){
 
+
         Fengxiongmao fengxiongmao = new Fengxiongmao();
-        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+//        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        ArrayList<String> list = new ArrayList<>();
+        list.add("555112-103");
+//        list.add("555088-105");
+//        list.add("575441-105");
+//        list.add("554724-073");
+//        list.add("CD4991-300");
+//        list.add("CT8532-050");
+//        list.add("575441-029");
+//        list.add("CT8532-050");
         try {
-            while(true){
-                String search = fengxiongmao.search("555088-105");//555088-105
-                List<String> idList = fengxiongmao.commodityIdList(search);
-                for(String id: idList){
-                    fengxiongmao.commodityDetail(cachedThreadPool,id);
+            while(temp<4){
+                for (String code:list){
+                    String search = fengxiongmao.search(code);
+                    List<String> idList = fengxiongmao.commodityIdList(search);
+                    for(String id: idList){
+                        fengxiongmao.commodityDetail(id);
+                    }
                 }
             }
         }catch (Exception e){
@@ -63,7 +81,7 @@ public class Fengxiongmao {
         map.put("sortColumn","");
         map.put("sortType","asc");
         map.put("filterIds","");
-        map.put("shopNo","NKCD94");
+        map.put("shopNo","");
         HttpURLConnection conn = HttpUtil.getConn(url, map);
         String result = HttpUtil.get(conn);
         return result;
@@ -80,7 +98,7 @@ public class Fengxiongmao {
         return idList;
     }
 
-    private  String commodityDetail(ExecutorService cachedThreadPool,String id) throws Exception{
+    private  String commodityDetail(String id) throws Exception{
         String url = "https://wxmall.topsports.com.cn/shopCommodity/queryShopCommodityDetail/" + id;
         HttpURLConnection conn = HttpUtil.getConn(url, null);
         String result = HttpUtil.get(conn);
@@ -93,8 +111,8 @@ public class Fengxiongmao {
                     JSONObject info = (JSONObject)skuList.get(i);
                     if ((int)info.get("stock") >0){
                         System.out.println("有货售卖："+id);
+                        System.out.println(sult);
                         JSONObject jsonObject = JSONObject.parseObject(param);
-                        jsonObject.put("rid","202011142240537246bafb0cdda8a37b");
                         JSONArray array = jsonObject.getJSONArray("subOrderList");
                         JSONObject subOrderList = (JSONObject) array.get(0);
 
@@ -113,13 +131,7 @@ public class Fengxiongmao {
                         subOrderList.put("commodityList",arrayOne);
                         array.set(0,subOrderList);
                         jsonObject.put("subOrderList",array);
-                        cachedThreadPool.execute(()->{
-                            try {
-                                send(jsonObject);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        });
+                        send(jsonObject);
                     }
                 }
             }
@@ -132,18 +144,10 @@ public class Fengxiongmao {
 
     public String send(JSONObject jsonObject) throws Exception{
 
-        ArrayList<String> list = new ArrayList<>();
-        list.add("202011202024348866c290c2cfacafe2");
-        list.add("2020112020243846e10b51a7abd7e5a7");
-        list.add("202011202024412b795d2694e33c8886");
-        list.add("202011202024459dbe2ea9fceb4b36d8");
-        list.add("20201120202448433e23591bcc99e96b");
-        list.add("2020112020245281192af34cd91247b2");
-        list.add("20201120194256e2df9ab6a7e08ec04b");
-        list.add("20201120194300e9bf222f70cc4a30c7");
 
         String url = "https://wxmall.topsports.com.cn/order/create";
-        jsonObject.put("rid",list.get(temp));
+        jsonObject.put("rid",list[temp]);
+        temp+=1;
         String body = "";
         //创建post方式请求对象
 
@@ -157,15 +161,14 @@ public class Fengxiongmao {
         //设置header信息
         httpPost.setHeader(":Host","wxmall.topsports.com.cn");
         httpPost.setHeader("Connection","keep-alive");
-        httpPost.setHeader("Authorization","c79f1281-470c-4f93-90f4-6d5043ad2f75");
-        httpPost.setHeader("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat");
+        httpPost.setHeader("Authorization","54da31d4-1294-4514-a5cc-c6d8547f94a5");
+        httpPost.setHeader("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows");
         httpPost.setHeader("Referer", "https://servicewechat.com/wx71a6af1f91734f18/22/page-frame.html");
         httpPost.setHeader("Accept-Encoding","gzip, deflate, br");
         httpPost.setHeader("content-type","application/json");
         httpPost.setHeader("Accept-Language","zh-cn");
         //执行请求操作，并拿到结果（同步阻塞）
         CloseableHttpResponse response = client.execute(httpPost);
-        list.remove(0);
         //获取结果实体
         HttpEntity entity = response.getEntity();
         if (entity != null) {
@@ -202,7 +205,7 @@ public class Fengxiongmao {
             "\n" +
             "                    },\n" +
             "                    \"orderByClause\":null,\n" +
-            "                    \"shoppingcartId\":\"be1344c2dbbc412897074a19cf26fd8c\",\n" +
+            "                    \"shoppingcartId\":\"46edb7222c434f63ba97b7525455abb7\",\n" +
             "                    \"paterId\":null,\n" +
             "                    \"productCode\":\"CT0978-600\",\n" +
             "                    \"productNo\":\"20200708000342\",\n" +

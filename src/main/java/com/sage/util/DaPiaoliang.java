@@ -10,44 +10,61 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
-
 import java.net.HttpURLConnection;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
-import static com.sage.util.HttpUtil.getParamString;
+public class DaPiaoliang {
 
-public class Commodity {
+    private static int temp = 0;
 
-    public static int temp = 0;
+    private static String list[] = {
+            "202011262022529ef8a350256178267d",
+            "20201126202255383e6ec4b9ae3b6857",
+            "20201126202300c1bd384874c511cf7b",
+    };
+
+
+
 
     public static void main(String[] args){
-        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
-//        try {
-//            while(true){
-//                String search = search("554724-073");
-//                List<String> idList = commodityIdList(search);
-//                for(String id: idList){
-//                    commodityDetail(cachedThreadPool,id);
-//                }
-//                Thread.sleep(1000);
-//            }
-//        }catch (Exception e){
-//            e.printStackTrace();
-//        }
+
+        DaPiaoliang daPiaoliang = new DaPiaoliang();
+
+
+//        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+        ArrayList<String> list = new ArrayList<>();
+        list.add("555112-103");
+//        list.add("CT8532-050");
+//        list.add("575441-029");
+//        list.add("CT8532-050");
+        try {
+            while(temp<4){
+                for (String code:list){
+                    String search = daPiaoliang.search(code);
+                    List<String> idList = daPiaoliang.commodityIdList(search);
+                    for(String id: idList){
+                        daPiaoliang.commodityDetail(id);
+                    }
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 //        while (true){
 //            try {
-//                commodityDetail("9872e1e5ed3d466087b0583afab083dc");
+//                String detail =fengxiongmao.commodityDetail("900b63140fa847a193185c53fac8e4a1");
 //            } catch (Exception e) {
 //                e.printStackTrace();
 //            }
 //        }
+
     }
 
 
 
-    private static String search(String keyword) throws Exception{
+    private  String search(String keyword) throws Exception{
         String url = "https://wxmall.topsports.com.cn/search/shopCommodity/list";
         HashMap<String, String> map = new HashMap<>();
         map.put("searchKeyword",keyword);
@@ -62,7 +79,7 @@ public class Commodity {
         return result;
     }
 
-    private static List<String> commodityIdList(String searchResult){
+    private  List<String> commodityIdList(String searchResult){
         ArrayList<String> idList = new ArrayList<>();
         List list = (List<Object>)((JSONObject)((JSONObject)JSONObject.parseObject(searchResult).get("data")).get("spu")).get("list");
         for (int i = 0; i < list.size(); i++) {
@@ -73,7 +90,7 @@ public class Commodity {
         return idList;
     }
 
-    private static void commodityDetail(String id) throws Exception{
+    private  String commodityDetail(String id) throws Exception{
         String url = "https://wxmall.topsports.com.cn/shopCommodity/queryShopCommodityDetail/" + id;
         HttpURLConnection conn = HttpUtil.getConn(url, null);
         String result = HttpUtil.get(conn);
@@ -82,14 +99,15 @@ public class Commodity {
         if ("3".equals(data.get("status").toString())){
             if ((int)data.get("stock") >0){
                 JSONArray skuList = (JSONArray) data.get("skuList");
-                for (int i = 0; i < skuList.size(); i++) {
+                for (int i = 1; i < skuList.size(); i++) {
                     JSONObject info = (JSONObject)skuList.get(i);
                     if ((int)info.get("stock") >0){
                         System.out.println("有货售卖："+id);
+                        System.out.println(sult);
                         JSONObject jsonObject = JSONObject.parseObject(param);
-                        jsonObject.put("rid","202011142240537246bafb0cdda8a37b");
                         JSONArray array = jsonObject.getJSONArray("subOrderList");
                         JSONObject subOrderList = (JSONObject) array.get(0);
+
                         subOrderList.put("shopNo",data.get("shopNo").toString());//设置店铺号
                         JSONArray arrayOne = subOrderList.getJSONArray("commodityList");
                         JSONObject commodityList = (JSONObject) arrayOne.get(0);
@@ -110,18 +128,18 @@ public class Commodity {
                 }
             }
         }
+        return result;
     }
 
-    public static String send(JSONObject jsonObject) throws Exception{
 
-        ArrayList<String> list = new ArrayList<>();
-        list.add("2020112117365087b599885f4f62b2a3");
-        list.add("2020112117365464f79ad14661889791");
-        list.add("20201121173701cb44731636100fc5db");
-        list.add("20201121173707087c705d3a4e9a58e1");
+
+
+    public String send(JSONObject jsonObject) throws Exception{
+
 
         String url = "https://wxmall.topsports.com.cn/order/create";
-        jsonObject.put("rid",list.get(temp));
+        jsonObject.put("rid",list[temp]);
+        temp+=1;
         String body = "";
         //创建post方式请求对象
 
@@ -135,7 +153,7 @@ public class Commodity {
         //设置header信息
         httpPost.setHeader(":Host","wxmall.topsports.com.cn");
         httpPost.setHeader("Connection","keep-alive");
-        httpPost.setHeader("Authorization","c79f1281-470c-4f93-90f4-6d5043ad2f75");
+        httpPost.setHeader("Authorization","f6832d05-a93d-43e1-aef8-7b8c846c9631");
         httpPost.setHeader("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat");
         httpPost.setHeader("Referer", "https://servicewechat.com/wx71a6af1f91734f18/22/page-frame.html");
         httpPost.setHeader("Accept-Encoding","gzip, deflate, br");
@@ -150,20 +168,21 @@ public class Commodity {
             body = EntityUtils.toString(entity, "utf-8");
         }
         EntityUtils.consume(entity);
-        temp+=1;
         //释放链接
         response.close();
         System.out.println(body);
         return body;
     }
 
+
+
     private static String param = "{\n" +
             "    \"merchantNo\":\"TS\",\n" +
             "    \"rid\":\"202011151614220b6ed9f5bea80eefe3\",\n" +
-            "    \"shippingId\":\"8a7a099875bbd1df0175e5964d5a6f06\",\n" +
+            "    \"shippingId\":\"8a7a099875f8d9d20175fe4fa971643d\",\n" +
             "    \"subOrderList\":[\n" +
             "        {\n" +
-            "            \"shopNo\":\"NKCD94\",\n" +
+            "            \"shopNo\":\"NKWA02\",\n" +
             "            \"totalNum\":1,\n" +
             "            \"totalPrice\":null,\n" +
             "            \"virtualShopFlag\":0,\n" +
@@ -178,7 +197,7 @@ public class Commodity {
             "\n" +
             "                    },\n" +
             "                    \"orderByClause\":null,\n" +
-            "                    \"shoppingcartId\":\"be1344c2dbbc412897074a19cf26fd8c\",\n" +
+            "                    \"shoppingcartId\":\"337fd94ec8084693ba32e9d3aa96827f\",\n" +
             "                    \"paterId\":null,\n" +
             "                    \"productCode\":\"CT0978-600\",\n" +
             "                    \"productNo\":\"20200708000342\",\n" +
