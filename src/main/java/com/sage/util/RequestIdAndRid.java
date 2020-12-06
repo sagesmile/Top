@@ -26,14 +26,15 @@ public class RequestIdAndRid {
 //        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
         ArrayList<String> list = new ArrayList<>();
         list.add("555112-103");
+//        list.add("CT0979-100");
         list.add("555088-105");
-        list.add("575441-105");
+//        list.add("575441-105");
 //        list.add("DC1788-029");
 //        list.add("555088-105");
 //        list.add("575441-105");
 //        list.add("CT8532-050");
 //        list.add("575441-029");
-//        list.add("CT8532-050");
+//        list.add("554724-073");
         try {
             while(true){
                 for (String code:list){
@@ -43,7 +44,7 @@ public class RequestIdAndRid {
                         commodityDetail(id);
                     }
                 }
-                Thread.sleep(500);
+                Thread.sleep(100);
             }
         }catch (Exception e){
             e.printStackTrace();

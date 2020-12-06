@@ -20,9 +20,9 @@ public class DaPiaoliang {
     private static int temp = 0;
 
     private static String list[] = {
-            "202011262022529ef8a350256178267d",
-            "20201126202255383e6ec4b9ae3b6857",
-            "20201126202300c1bd384874c511cf7b",
+            "202011281250307e5fa41e1fc49655e5",
+            "20201128125033eb393c18855ffde0e3",
+            "2020112812503612e48777db8ac358d2",
     };
 
 
@@ -73,7 +73,7 @@ public class DaPiaoliang {
         map.put("sortColumn","");
         map.put("sortType","asc");
         map.put("filterIds","");
-        map.put("shopNo","");
+        map.put("shopNo","NKCD94");
         HttpURLConnection conn = HttpUtil.getConn(url, map);
         String result = HttpUtil.get(conn);
         return result;
@@ -91,6 +91,7 @@ public class DaPiaoliang {
     }
 
     private  String commodityDetail(String id) throws Exception{
+        int j = 1;
         String url = "https://wxmall.topsports.com.cn/shopCommodity/queryShopCommodityDetail/" + id;
         HttpURLConnection conn = HttpUtil.getConn(url, null);
         String result = HttpUtil.get(conn);
@@ -102,6 +103,7 @@ public class DaPiaoliang {
                 for (int i = 1; i < skuList.size(); i++) {
                     JSONObject info = (JSONObject)skuList.get(i);
                     if ((int)info.get("stock") >0){
+
                         System.out.println("有货售卖："+id);
                         System.out.println(sult);
                         JSONObject jsonObject = JSONObject.parseObject(param);
@@ -153,7 +155,7 @@ public class DaPiaoliang {
         //设置header信息
         httpPost.setHeader(":Host","wxmall.topsports.com.cn");
         httpPost.setHeader("Connection","keep-alive");
-        httpPost.setHeader("Authorization","f6832d05-a93d-43e1-aef8-7b8c846c9631");
+        httpPost.setHeader("Authorization","e71770a2-9d24-422c-9fc6-61f74aab17c0");
         httpPost.setHeader("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat");
         httpPost.setHeader("Referer", "https://servicewechat.com/wx71a6af1f91734f18/22/page-frame.html");
         httpPost.setHeader("Accept-Encoding","gzip, deflate, br");
@@ -197,7 +199,7 @@ public class DaPiaoliang {
             "\n" +
             "                    },\n" +
             "                    \"orderByClause\":null,\n" +
-            "                    \"shoppingcartId\":\"337fd94ec8084693ba32e9d3aa96827f\",\n" +
+            "                    \"shoppingcartId\":\"b4d5b595057e4fea837a9f3ee21cf179\",\n" +
             "                    \"paterId\":null,\n" +
             "                    \"productCode\":\"CT0978-600\",\n" +
             "                    \"productNo\":\"20200708000342\",\n" +

@@ -7,8 +7,13 @@ public class Test {
     private static int temp = 0;
 
     public static void main(String[] args) {
-        for (int i = 0; i < 5; i++) {
-            prit();
+        int j = 1;
+        for (int i = 0; i < 7; i++) {
+            if (j<3){
+                j+=1;
+                continue;
+            }
+            System.out.println(j);
         }
     }
     

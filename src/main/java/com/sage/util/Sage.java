@@ -2,7 +2,6 @@ package com.sage.util;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -10,17 +9,13 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-public class Fengxiongmao {
+public class Sage {
 
     private static int temp = 0;
 
@@ -41,23 +36,23 @@ public class Fengxiongmao {
 
     public static void main(String[] args){
 
-        Fengxiongmao fengxiongmao = new Fengxiongmao();
+        Sage sage = new Sage();
 
 
 //        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
         ArrayList<String> list = new ArrayList<>();
-//        list.add("DC1788-100");
-        list.add("555112-103");
+        list.add("DC0706-111");
+//        list.add("555112-103");
 //        list.add("CT8532-050");
 //        list.add("575441-029");
 //        list.add("CT8532-050");
         try {
-            while(temp<4){
+            while(temp<1){
                 for (String code:list){
-                    String search = fengxiongmao.search(code);
-                    List<String> idList = fengxiongmao.commodityIdList(search);
+                    String search = sage.search(code);
+                    List<String> idList = sage.commodityIdList(search);
                     for(String id: idList){
-                        fengxiongmao.commodityDetail(id);
+                        sage.commodityDetail(id);
                     }
                 }
             }
@@ -86,7 +81,7 @@ public class Fengxiongmao {
         map.put("sortColumn","");
         map.put("sortType","asc");
         map.put("filterIds","");
-        map.put("shopNo","");
+        map.put("shopNo","NKSG73");
         HttpURLConnection conn = HttpUtil.getConn(url, map);
         String result = HttpUtil.get(conn);
         return result;
@@ -116,10 +111,6 @@ public class Fengxiongmao {
                 for (int i = 1; i < skuList.size(); i++) {
                     JSONObject info = (JSONObject)skuList.get(i);
                     if ((int)info.get("stock") >0){
-                        if (j<2){
-                            j++;
-                            continue;
-                        }
                         System.out.println("有货售卖："+id);
                         System.out.println(sult);
                         JSONObject jsonObject = JSONObject.parseObject(param);
@@ -140,6 +131,9 @@ public class Fengxiongmao {
                         subOrderList.put("commodityList",arrayOne);
                         array.set(0,subOrderList);
                         jsonObject.put("subOrderList",array);
+                        jsonObject.put("validate",validate[temp]);
+                        jsonObject.put("seccode",validate[temp]+"|jordan");
+                        jsonObject.put("challenge",challenge[temp]);
                         send(jsonObject);
                     }
                 }
@@ -168,8 +162,8 @@ public class Fengxiongmao {
         //设置header信息
         httpPost.setHeader(":Host","wxmall.topsports.com.cn");
         httpPost.setHeader("Connection","keep-alive");
-        httpPost.setHeader("Authorization","0afe0d76-1681-4707-9932-925cb9b63d11");
-        httpPost.setHeader("User-Agent","Mozilla/5.0 (iPhone; CPU iPhone OS 11_2_5 like Mac OS X) AppleWebKit/604.5.6 (KHTML, like Gecko) Mobile/15D60 MicroMessenger/7.0.10(0x17000a21) NetType/WIFI Language/zh_CN");
+        httpPost.setHeader("Authorization","6c82bc97-2e5e-421a-9dc0-6a6cb7fcc69e");
+        httpPost.setHeader("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat");
         httpPost.setHeader("Referer", "https://servicewechat.com/wx71a6af1f91734f18/22/page-frame.html");
         httpPost.setHeader("Accept-Encoding","gzip, deflate, br");
         httpPost.setHeader("content-type","application/json");
