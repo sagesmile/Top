@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 
 import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,9 +26,9 @@ public class RequestIdAndRid {
         Fengxiongmao fengxiongmao = new Fengxiongmao();
 //        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
         ArrayList<String> list = new ArrayList<>();
-        list.add("555112-103");
-//        list.add("CT0979-100");
-        list.add("555088-105");
+//        list.add("554725-077");
+        list.add("CT0979-602");
+//        list.add("555088-105");
 //        list.add("575441-105");
 //        list.add("DC1788-029");
 //        list.add("555088-105");
@@ -44,7 +45,7 @@ public class RequestIdAndRid {
                         commodityDetail(id);
                     }
                 }
-                Thread.sleep(100);
+                Thread.sleep(1000);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -62,7 +63,7 @@ public class RequestIdAndRid {
 
 
     private static   String search(String keyword) throws Exception{
-        String url = "https://wxmall.topsports.com.cn/search/shopCommodity/list";
+        String url = "https://wxmall-lv.topsports.com.cn/search/shopCommodity/list";
         HashMap<String, String> map = new HashMap<>();
         map.put("searchKeyword",keyword);
         map.put("current","1");
@@ -95,8 +96,23 @@ public class RequestIdAndRid {
         JSONObject data = (JSONObject)sult.get("data");
         if ("3".equals(data.get("status").toString())){
             if ((int)data.get("stock") >0){
-                System.out.println("有货售卖");
-                System.out.println(LocalDateTime.now() + "--" + result);
+                String skuList = data.get("skuList").toString();
+                List<String> list = JSONArray.parseArray(skuList, String.class);
+                HashMap<String, String> map = new HashMap<>();
+                for (String one :list){
+                    JSONObject jsonObject = JSONObject.parseObject(one);
+                    int stock = Integer.parseInt(jsonObject.get("stock").toString());
+                    if (stock>0){
+                        if (!jsonObject.get("sizeCode").equals(null)){
+                            map.put(jsonObject.get("sizeCode").toString(),stock+"双");
+                        }else{
+                            map.put(jsonObject.get("sizeEur").toString(),stock+"双");
+                        }
+                    }
+                }
+                System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) +": " + data.get("shopName").toString()+ "有货售卖："+data.get("productName").toString());
+                System.out.println("库存信息："+map);
+                System.out.println();
             }
         }
     }
