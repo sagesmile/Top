@@ -1,7 +1,9 @@
 package com.sage.util;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -10,27 +12,32 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Menglei {
 
     private static int temp = 0;
 
+    private static String token = "ad057a53-aacd-4f17-a45a-7ed5d76d9a9a";
+
     private static String challenge[] = {
-            "d07b4914cad55c0fd9cdc7845912d774",
-            "813c759f26d6e6b4710f29911834e879",
-            "619e00514d41fb9ba3165573c07c752a",
+            "f3ac588d789e291c0f83edfbbbf5d881",
     };
 
     private static String validate[] = {
-            "cec6fee7710f9b63f282b7c3e1a54265",
-            "7ca39a7a6a0d051fed804ea4a9a62685",
-            "109e96f5b73072a8b558db1c4696d232",
+            "a4337e26e221e15137e0ff5c7cfd1a3f",
     };
 
+    private static String addCartUrl = "https://wxmall-lv.topsports.com.cn/shoppingcart";
+    private static String getCartUrl = "https://wxmall-lv.topsports.com.cn/shoppingcart/index";
+    private static String commodityUrl = "https://wxmall-lv.topsports.com.cn/shopCommodity/queryShopCommodityDetail/";
+    private static String createOrder = "https://wxmall-lv.topsports.com.cn/order/create";
 
 
 
@@ -46,24 +53,26 @@ public class Menglei {
 //        list.add("CT8532-050");
 //        list.add("575441-029");
 //        list.add("CT8532-050");
-        try {
-            while(temp<4){
-                    String search = sage.search("BQ6472-202");
-                    List<String> idList = sage.commodityIdList(search);
-                    for(String id: idList){
-                        sage.commodityDetail(id);
-                    }
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-//        while (true){
-//            try {
-//                String detail =sage.commodityDetail("36a468cb0309489b8bee34cb696fa54e");
-////                System.out.println(detail);
-//            } catch (Exception e) {
-//                e.printStackTrace();
+//        try {
+//            while(temp<4){
+//                    String search = sage.search("BA5751-072");
+//                    List<String> idList = sage.commodityIdList(search);
+//                    for(String id: idList){
+//                        sage.commodityDetail(id);
+//                    }
 //            }
+//        }catch (Exception e){
+//            e.printStackTrace();
+//        }
+//        while (true){
+            try {
+                long startTime = System.currentTimeMillis();
+                String detail =sage.commodityDetail("4cfca74bf3d84a35a317c4fb899df2c5");
+                long endTime = System.currentTimeMillis();
+                System.out.println("程序运行时间：" + (endTime - startTime) + "ms");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 //        }
 
     }
@@ -71,7 +80,7 @@ public class Menglei {
 
 
     private  String search(String keyword) throws Exception{
-        String url = "https://wxmall.topsports.com.cn/search/shopCommodity/list";
+        String url = "https://wxmall-lv.topsports.com.cn/search/shopCommodity/list";
         HashMap<String, String> map = new HashMap<>();
         map.put("searchKeyword",keyword);
         map.put("current","1");
@@ -79,7 +88,7 @@ public class Menglei {
         map.put("sortColumn","");
         map.put("sortType","asc");
         map.put("filterIds","");
-        map.put("shopNo","NKXM45");//NKND20
+        map.put("shopNo","");//NKND20
         HttpURLConnection conn = HttpUtil.getConn(url, map);
         String result = HttpUtil.get(conn);
         return result;
@@ -98,7 +107,7 @@ public class Menglei {
 
     private  String commodityDetail(String id) throws Exception{
         int j = 1;
-        String url = "https://wxmall.topsports.com.cn/shopCommodity/queryShopCommodityDetail/" + id;
+        String url = commodityUrl + id;
         HttpURLConnection conn = HttpUtil.getConn(url, null);
         String result = HttpUtil.get(conn);
         JSONObject sult = JSONObject.parseObject(result);
@@ -106,20 +115,36 @@ public class Menglei {
         if ("3".equals(data.get("status").toString())){
             if ((int)data.get("stock") >0){
                 JSONArray skuList = (JSONArray) data.get("skuList");
-                for (int i = 0; i < skuList.size(); i++) {
-//                for (int i = skuList.size(); i > 0; i--) {
-//                    JSONObject info = (JSONObject)skuList.get(i-1);
-                    JSONObject info = (JSONObject)skuList.get(i);
+//                for (int i = 0; i < skuList.size(); i++) {
+                    JSONObject info = (JSONObject)skuList.get(0);
                     if ((int)info.get("stock") >0){
                         System.out.println("有货售卖："+id);
-                        System.out.println(sult);
+//                        System.out.println(sult);
                         JSONObject jsonObject = JSONObject.parseObject(param);
                         JSONArray array = jsonObject.getJSONArray("subOrderList");
                         JSONObject subOrderList = (JSONObject) array.get(0);
                         subOrderList.put("shopNo",data.get("shopNo").toString());//设置店铺号
                         JSONArray arrayOne = subOrderList.getJSONArray("commodityList");
                         JSONObject commodityList = (JSONObject) arrayOne.get(0);
+
+                        JSONObject cartJS = JSONObject.parseObject(cartCode);
+                        cartJS.put("shopNo",data.get("shopNo").toString());
+                        cartJS.put("productCode",data.get("productCode").toString());
+                        cartJS.put("productSkuNo",info.get("skuNo").toString());
+                        cartJS.put("productSizeCode",info.get("sizeCode").toString());
+                        cartJS.put("productSkuId",info.get("id").toString());
+                        cartJS.put("shopCommodityId",id);
+                        send(cartCode.toString(),addCartUrl);
+                        conn = HttpUtil.getConn(getCartUrl, null);
+                        conn.setRequestProperty("Authorization",token);
+                        result = HttpUtil.get(conn);
+                        JSONObject CartData = (JSONObject)JSONObject.parseObject(result).get("data");
+                        CartData = JSONObject.parseObject(JSON.parseArray(CartData.get("willBuyList").toString(), String.class).get(0));
+                        String buyCommodityVOList = JSONArray.parseArray(CartData.get("buyCommodityVOList").toString(), String.class).get(0);
+                        String shoppingcartId = JSONObject.parseObject(buyCommodityVOList).get("shoppingcartId").toString();
+//                        //下单参数
                         commodityList.put("productCode",data.get("productCode").toString());
+                        commodityList.put("shoppingcartId",shoppingcartId);
                         commodityList.put("productNo",data.get("productNo").toString());
                         commodityList.put("sizeNo",info.get("sizeNo").toString());
                         commodityList.put("sizeCode",info.get("sizeCode").toString());
@@ -134,9 +159,10 @@ public class Menglei {
                         jsonObject.put("validate",validate[temp]);
                         jsonObject.put("seccode",validate[temp]+"|jordan");
                         jsonObject.put("challenge",challenge[temp]);
-                        send(jsonObject);
+                        send(jsonObject.toString(),createOrder);
+                        temp++;
                     }
-                }
+//                }
             }
         }
         return result;
@@ -144,11 +170,8 @@ public class Menglei {
 
 
 
+    public String send(String requestBody,String url) throws Exception{
 
-    public String send(JSONObject jsonObject) throws Exception{
-
-
-        String url = "https://wxmall.topsports.com.cn/order/create";
         String body = "";
         //创建post方式请求对象
 
@@ -156,13 +179,13 @@ public class Menglei {
         HttpPost httpPost = new HttpPost(url);
 
         //装填参数
-        StringEntity s = new StringEntity(jsonObject.toString(), "utf-8");
+        StringEntity s = new StringEntity(requestBody, "utf-8");
         //设置参数到请求对象中
         httpPost.setEntity(s);
         //设置header信息
-        httpPost.setHeader(":Host","wxmall.topsports.com.cn");
+        httpPost.setHeader(":Host","wxmall-lv.topsports.com.cn");
         httpPost.setHeader("Connection","keep-alive");
-        httpPost.setHeader("Authorization","cb096ce3-f76f-4679-97e9-a3cf6909ead8");
+        httpPost.setHeader("Authorization",token);
         httpPost.setHeader("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat");
         httpPost.setHeader("Referer", "https://servicewechat.com/wx71a6af1f91734f18/22/page-frame.html");
         httpPost.setHeader("Accept-Encoding","gzip, deflate, br");
@@ -179,20 +202,33 @@ public class Menglei {
         EntityUtils.consume(entity);
         //释放链接
         response.close();
-        temp++;
         System.out.println(body);
         return body;
     }
 
 
+    private static String cartCode = "{\n" +
+            "    \"shopNo\":\"NKCQ54\",\n" +
+            "    \"productCode\":\"CV1753-101\",\n" +
+            "    \"productSkuNo\":\"20201130007910\",\n" +
+            "    \"productSizeCode\":\"6.5\",\n" +
+            "    \"productSkuId\":\"314fcf0410c04ab3a4c00ad491be699c\",\n" +
+            "    \"shopCommodityId\":\"99fa3572913e452fa8f0bdc197aed43b\",\n" +
+            "    \"brandNo\":\"NK\",\n" +
+            "    \"num\":1,\n" +
+            "    \"merchantNo\":\"TS\",\n" +
+            "    \"liveType\":0,\n" +
+            "    \"roomId\":\"\",\n" +
+            "    \"roomName\":\"\"\n" +
+            "}";
 
     private static String param = "{\n" +
             "    \"merchantNo\":\"TS\",\n" +
-            "    \"rid\":\"202011151614220b6ed9f5bea80eefe3\",\n" +
+            "    \"rid\":\"\",\n" +
             "    \"shippingId\":\"8a7a08b57651ae6a01765cb5e70f7b1c\",\n" +
             "    \"subOrderList\":[\n" +
             "        {\n" +
-            "            \"shopNo\":\"NKWA02\",\n" +
+            "            \"shopNo\":\"NKCQ54\",\n" +
             "            \"totalNum\":1,\n" +
             "            \"totalPrice\":null,\n" +
             "            \"virtualShopFlag\":0,\n" +
@@ -207,20 +243,22 @@ public class Menglei {
             "\n" +
             "                    },\n" +
             "                    \"orderByClause\":null,\n" +
-            "                    \"shoppingcartId\":\"2e6b2dc608de488a8170fb35fd87194b\",\n" +
+            "                    \"shoppingcartId\":\"198e1bbc1ccc42f99e2828a836c0555e\",\n" +
             "                    \"paterId\":null,\n" +
-            "                    \"productCode\":\"CT0978-600\",\n" +
-            "                    \"productNo\":\"20200708000342\",\n" +
+            "                    \"productCode\":\"CV1753-101\",\n" +
+            "                    \"productNo\":\"20200927001161\",\n" +
             "                    \"colorNo\":\"00\",\n" +
-            "                    \"sizeNo\":\"20160426000047\",\n" +
-            "                    \"sizeCode\":\"9.5\",\n" +
+            "                    \"colorName\":\"默认\",\n" +
+            "                    \"sizeNo\":\"20160426000041\",\n" +
+            "                    \"sizeCode\":\"6.5\",\n" +
+            "                    \"sizeEur\":\"39\",\n" +
             "                    \"brandDetailNo\":\"NK01\",\n" +
             "                    \"proNo\":null,\n" +
             "                    \"proName\":null,\n" +
             "                    \"assignProNo\":\"0\",\n" +
-            "                    \"skuId\":\"d99a13d830d44fe29ce786e734288069\",\n" +
-            "                    \"skuNo\":\"20200826003155\",\n" +
-            "                    \"shopCommodityId\":\"381a5d6c4a604ae8b9982bb952db7a81\",\n" +
+            "                    \"skuId\":\"314fcf0410c04ab3a4c00ad491be699c\",\n" +
+            "                    \"skuNo\":\"20201130007910\",\n" +
+            "                    \"shopCommodityId\":\"99fa3572913e452fa8f0bdc197aed43b\",\n" +
             "                    \"num\":1,\n" +
             "                    \"status\":3,\n" +
             "                    \"itemFlag\":0,\n" +
@@ -231,6 +269,7 @@ public class Menglei {
             "                    \"liveType\":0,\n" +
             "                    \"roomId\":null,\n" +
             "                    \"roomName\":\"\",\n" +
+            "                    \"zoneQsLevel\":\"H\",\n" +
             "                    \"live_type\":0,\n" +
             "                    \"room_id\":\"\",\n" +
             "                    \"room_name\":\"\"\n" +
@@ -239,6 +278,12 @@ public class Menglei {
             "            \"ticketCodes\":null,\n" +
             "            \"vipPrefAmount\":\"0.00\",\n" +
             "            \"prefAmount\":\"0.00\",\n" +
+            "            \"ticketDtos\":[\n" +
+            "\n" +
+            "            ],\n" +
+            "            \"unTicketDtos\":[\n" +
+            "\n" +
+            "            ],\n" +
             "            \"orderTickets\":null,\n" +
             "            \"ticketPresentDtos\":null,\n" +
             "            \"expressAmount\":\"0.00\",\n" +
@@ -251,9 +296,10 @@ public class Menglei {
             "\n" +
             "    ],\n" +
             "    \"verificationType\":2,\n" +
-            "    \"validate\":\"360867c08bce2ff4978e57f78bc48a49\",\n" +
-            "    \"seccode\":\"360867c08bce2ff4978e57f78bc48a49|jordan\",\n" +
-            "    \"challenge\":\"9fa932aaaf1b535db0d231583f39229b\"\n" +
+            "    \"validate\":\"5c57ac04ffab573b7728e8056c6182d8\",\n" +
+            "    \"seccode\":\"5c57ac04ffab573b7728e8056c6182d8|jordan\",\n" +
+            "    \"challenge\":\"cb5955d2871affe931e4866e0cd1550a\"\n" +
             "}";
+
 
 }
