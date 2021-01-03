@@ -24,14 +24,14 @@ public class Menglei {
 
     private static int temp = 0;
 
-    private static String token = "ad057a53-aacd-4f17-a45a-7ed5d76d9a9a";
+    private static String token = "22e3345e-c9f6-4ca7-a9ad-67424ff7bfbd";
 
     private static String challenge[] = {
-            "f3ac588d789e291c0f83edfbbbf5d881",
+            "7007b12ca13f048d3e5abbf4263a081b",
     };
 
     private static String validate[] = {
-            "a4337e26e221e15137e0ff5c7cfd1a3f",
+            "02e7a04fa381806356d165b0accdc27b",
     };
 
     private static String addCartUrl = "https://wxmall-lv.topsports.com.cn/shoppingcart";
@@ -43,7 +43,7 @@ public class Menglei {
 
     public static void main(String[] args){
 
-        Menglei sage = new Menglei();
+        Menglei menglei = new Menglei();
 
 
 //        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
@@ -53,26 +53,28 @@ public class Menglei {
 //        list.add("CT8532-050");
 //        list.add("575441-029");
 //        list.add("CT8532-050");
-//        try {
-//            while(temp<4){
-//                    String search = sage.search("BA5751-072");
-//                    List<String> idList = sage.commodityIdList(search);
-//                    for(String id: idList){
-//                        sage.commodityDetail(id);
-//                    }
-//            }
-//        }catch (Exception e){
-//            e.printStackTrace();
-//        }
-//        while (true){
-            try {
-                long startTime = System.currentTimeMillis();
-                String detail =sage.commodityDetail("4cfca74bf3d84a35a317c4fb899df2c5");
-                long endTime = System.currentTimeMillis();
-                System.out.println("程序运行时间：" + (endTime - startTime) + "ms");
-            } catch (Exception e) {
-                e.printStackTrace();
+        try {
+            while(temp<4){
+
+                    String search = menglei.search("CT0979-107");
+                    Thread.sleep(200);
+                    List<String> idList = menglei.commodityIdList(search);
+                    for(String id: idList){
+                        menglei.commodityDetail(id);
+                    }
             }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+//        while (true){
+//            try {
+////                long startTime = System.currentTimeMillis();
+//                String detail =menglei.commodityDetail("fc624467109144529d0f73b0e0091745");
+////                long endTime = System.currentTimeMillis();
+////                System.out.println("程序运行时间：" + (endTime - startTime) + "ms");
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
 //        }
 
     }
@@ -88,7 +90,7 @@ public class Menglei {
         map.put("sortColumn","");
         map.put("sortType","asc");
         map.put("filterIds","");
-        map.put("shopNo","");//NKND20
+        map.put("shopNo","NKXM45");//NKND20
         HttpURLConnection conn = HttpUtil.getConn(url, map);
         String result = HttpUtil.get(conn);
         return result;
@@ -107,6 +109,7 @@ public class Menglei {
 
     private  String commodityDetail(String id) throws Exception{
         int j = 1;
+        int cishu = 0;
         String url = commodityUrl + id;
         HttpURLConnection conn = HttpUtil.getConn(url, null);
         String result = HttpUtil.get(conn);
@@ -115,11 +118,15 @@ public class Menglei {
         if ("3".equals(data.get("status").toString())){
             if ((int)data.get("stock") >0){
                 JSONArray skuList = (JSONArray) data.get("skuList");
-//                for (int i = 0; i < skuList.size(); i++) {
+                for (int i = 0; i < skuList.size(); i++) {
                     JSONObject info = (JSONObject)skuList.get(0);
                     if ((int)info.get("stock") >0){
                         System.out.println("有货售卖："+id);
-//                        System.out.println(sult);
+                        System.out.println(sult);
+                        if (cishu==0){
+                            cishu++;
+                            continue;
+                        }
                         JSONObject jsonObject = JSONObject.parseObject(param);
                         JSONArray array = jsonObject.getJSONArray("subOrderList");
                         JSONObject subOrderList = (JSONObject) array.get(0);
@@ -134,7 +141,7 @@ public class Menglei {
                         cartJS.put("productSizeCode",info.get("sizeCode").toString());
                         cartJS.put("productSkuId",info.get("id").toString());
                         cartJS.put("shopCommodityId",id);
-                        send(cartCode.toString(),addCartUrl);
+                        send(cartJS.toString(),addCartUrl);
                         conn = HttpUtil.getConn(getCartUrl, null);
                         conn.setRequestProperty("Authorization",token);
                         result = HttpUtil.get(conn);
@@ -142,7 +149,9 @@ public class Menglei {
                         CartData = JSONObject.parseObject(JSON.parseArray(CartData.get("willBuyList").toString(), String.class).get(0));
                         String buyCommodityVOList = JSONArray.parseArray(CartData.get("buyCommodityVOList").toString(), String.class).get(0);
                         String shoppingcartId = JSONObject.parseObject(buyCommodityVOList).get("shoppingcartId").toString();
-//                        //下单参数
+
+
+                        //下单参数
                         commodityList.put("productCode",data.get("productCode").toString());
                         commodityList.put("shoppingcartId",shoppingcartId);
                         commodityList.put("productNo",data.get("productNo").toString());
@@ -159,10 +168,11 @@ public class Menglei {
                         jsonObject.put("validate",validate[temp]);
                         jsonObject.put("seccode",validate[temp]+"|jordan");
                         jsonObject.put("challenge",challenge[temp]);
-                        send(jsonObject.toString(),createOrder);
+//                        send(jsonObject.toString(),createOrder);
                         temp++;
+                        break;
                     }
-//                }
+                }
             }
         }
         return result;

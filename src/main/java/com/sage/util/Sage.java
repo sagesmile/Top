@@ -1,5 +1,6 @@
 package com.sage.util;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.http.HttpEntity;
@@ -16,21 +17,22 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Sage {
-
     private static int temp = 0;
 
+    private static String token = "99d190f2-6ee8-455e-a7f4-5daaf2643565";
+
     private static String challenge[] = {
-            "37f506a6974d56e10e943979b1fe12b4",
-            "2020120222274253ccfd5e63c78c8fc6",
-            "2020120222274511bd5fc83b31faa778",
+            "d736d8d7da6606bc5a60c4adc813a75a",
     };
 
     private static String validate[] = {
-            "a090fc62ba92c02552e7741323af3014",
-            "2020120222274253ccfd5e63c78c8fc6",
-            "2020120222274511bd5fc83b31faa778",
+            "c4e50c0fc2737220101f244dea25ddfd",
     };
 
+    private static String addCartUrl = "https://wxmall-lv.topsports.com.cn/shoppingcart";
+    private static String getCartUrl = "https://wxmall-lv.topsports.com.cn/shoppingcart/index";
+    private static String commodityUrl = "https://wxmall-lv.topsports.com.cn/shopCommodity/queryShopCommodityDetail/";
+    private static String createOrder = "https://wxmall-lv.topsports.com.cn/order/create";
 
 
 
@@ -38,34 +40,30 @@ public class Sage {
 
         Sage sage = new Sage();
 
-
-//        ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
-        ArrayList<String> list = new ArrayList<>();
-        list.add("DC0706-111");
-//        list.add("555112-103");
-//        list.add("CT8532-050");
-//        list.add("575441-029");
-//        list.add("CT8532-050");
+//
+        ArrayList<String> lists = new ArrayList<>();
+//        lists.add("BQ6472-202");
+        lists.add("CT0979-602");
         try {
-            while(temp<1){
-                for (String code:list){
-                    String search = sage.search(code);
+            while(temp<4){
+//                for (String list:lists){
+                    String search = sage.search("CT0979-602");
                     List<String> idList = sage.commodityIdList(search);
                     for(String id: idList){
                         sage.commodityDetail(id);
                     }
-                }
+//                }
             }
         }catch (Exception e){
             e.printStackTrace();
         }
 //        while (true){
-//            try {
-//                String detail =sage.commodityDetail("36a468cb0309489b8bee34cb696fa54e");
-////                System.out.println(detail);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
+//        try {
+//            String detail =sage.commodityDetail("c33d46bd98c049f0a95398655681c264");
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 //        }
 
     }
@@ -73,7 +71,7 @@ public class Sage {
 
 
     private  String search(String keyword) throws Exception{
-        String url = "https://wxmall.topsports.com.cn/search/shopCommodity/list";
+        String url = "https://wxmall-lv.topsports.com.cn/search/shopCommodity/list";
         HashMap<String, String> map = new HashMap<>();
         map.put("searchKeyword",keyword);
         map.put("current","1");
@@ -81,7 +79,7 @@ public class Sage {
         map.put("sortColumn","");
         map.put("sortType","asc");
         map.put("filterIds","");
-        map.put("shopNo","NKSG73");
+        map.put("shopNo","NKXM45");//NKND20
         HttpURLConnection conn = HttpUtil.getConn(url, map);
         String result = HttpUtil.get(conn);
         return result;
@@ -100,7 +98,8 @@ public class Sage {
 
     private  String commodityDetail(String id) throws Exception{
         int j = 1;
-        String url = "https://wxmall.topsports.com.cn/shopCommodity/queryShopCommodityDetail/" + id;
+        int cishu = 0;
+        String url = commodityUrl + id;
         HttpURLConnection conn = HttpUtil.getConn(url, null);
         String result = HttpUtil.get(conn);
         JSONObject sult = JSONObject.parseObject(result);
@@ -108,34 +107,60 @@ public class Sage {
         if ("3".equals(data.get("status").toString())){
             if ((int)data.get("stock") >0){
                 JSONArray skuList = (JSONArray) data.get("skuList");
-                for (int i = 1; i < skuList.size(); i++) {
-                    JSONObject info = (JSONObject)skuList.get(i);
-                    if ((int)info.get("stock") >0){
-                        System.out.println("有货售卖："+id);
-                        System.out.println(sult);
-                        JSONObject jsonObject = JSONObject.parseObject(param);
-                        JSONArray array = jsonObject.getJSONArray("subOrderList");
-                        JSONObject subOrderList = (JSONObject) array.get(0);
-                        subOrderList.put("shopNo",data.get("shopNo").toString());//设置店铺号
-                        JSONArray arrayOne = subOrderList.getJSONArray("commodityList");
-                        JSONObject commodityList = (JSONObject) arrayOne.get(0);
-                        commodityList.put("productCode",data.get("productCode").toString());
-                        commodityList.put("productNo",data.get("productNo").toString());
-                        commodityList.put("sizeNo",info.get("sizeNo").toString());
-                        commodityList.put("sizeCode",info.get("sizeCode").toString());
-                        commodityList.put("brandDetailNo",data.get("brandDetailNo").toString());
-                        commodityList.put("skuId",info.get("id").toString());
-                        commodityList.put("skuNo",info.get("skuNo").toString());
-                        commodityList.put("shopCommodityId",data.get("id").toString());
-                        arrayOne.set(0,commodityList);
-                        subOrderList.put("commodityList",arrayOne);
-                        array.set(0,subOrderList);
-                        jsonObject.put("subOrderList",array);
-                        jsonObject.put("validate",validate[temp]);
-                        jsonObject.put("seccode",validate[temp]+"|jordan");
-                        jsonObject.put("challenge",challenge[temp]);
-                        send(jsonObject);
+                for (int i = 0; i < skuList.size(); i++) {
+                JSONObject info = (JSONObject)skuList.get(0);
+                if ((int)info.get("stock") >0){
+                    System.out.println("有货售卖："+id);
+                    System.out.println(sult);
+                    if (cishu == 0) {
+                        cishu++;
+                        continue;
                     }
+                    JSONObject jsonObject = JSONObject.parseObject(param);
+                    JSONArray array = jsonObject.getJSONArray("subOrderList");
+                    JSONObject subOrderList = (JSONObject) array.get(0);
+                    subOrderList.put("shopNo",data.get("shopNo").toString());//设置店铺号
+                    JSONArray arrayOne = subOrderList.getJSONArray("commodityList");
+                    JSONObject commodityList = (JSONObject) arrayOne.get(0);
+
+                    JSONObject cartJS = JSONObject.parseObject(cartCode);
+                    cartJS.put("shopNo",data.get("shopNo").toString());
+                    cartJS.put("productCode",data.get("productCode").toString());
+                    cartJS.put("productSkuNo",info.get("skuNo").toString());
+                    cartJS.put("productSizeCode",info.get("sizeCode").toString());
+                    cartJS.put("productSkuId",info.get("id").toString());
+                    cartJS.put("shopCommodityId",id);
+                    send(cartJS.toString(),addCartUrl);
+                    conn = HttpUtil.getConn(getCartUrl, null);
+                    conn.setRequestProperty("Authorization",token);
+                    result = HttpUtil.get(conn);
+                    JSONObject CartData = (JSONObject)JSONObject.parseObject(result).get("data");
+                    CartData = JSONObject.parseObject(JSON.parseArray(CartData.get("willBuyList").toString(), String.class).get(0));
+                    String buyCommodityVOList = JSONArray.parseArray(CartData.get("buyCommodityVOList").toString(), String.class).get(0);
+                    String shoppingcartId = JSONObject.parseObject(buyCommodityVOList).get("shoppingcartId").toString();
+
+
+                    //下单参数
+                    commodityList.put("productCode",data.get("productCode").toString());
+                    commodityList.put("shoppingcartId",shoppingcartId);
+                    commodityList.put("productNo",data.get("productNo").toString());
+                    commodityList.put("sizeNo",info.get("sizeNo").toString());
+                    commodityList.put("sizeCode",info.get("sizeCode").toString());
+                    commodityList.put("brandDetailNo",data.get("brandDetailNo").toString());
+                    commodityList.put("skuId",info.get("id").toString());
+                    commodityList.put("skuNo",info.get("skuNo").toString());
+                    commodityList.put("shopCommodityId",data.get("id").toString());
+                    arrayOne.set(0,commodityList);
+                    subOrderList.put("commodityList",arrayOne);
+                    array.set(0,subOrderList);
+                    jsonObject.put("subOrderList",array);
+                    jsonObject.put("validate",validate[temp]);
+                    jsonObject.put("seccode",validate[temp]+"|jordan");
+                    jsonObject.put("challenge",challenge[temp]);
+                    send(jsonObject.toString(),createOrder);
+                    temp++;
+                    break;
+                }
                 }
             }
         }
@@ -144,11 +169,8 @@ public class Sage {
 
 
 
+    public String send(String requestBody,String url) throws Exception{
 
-    public String send(JSONObject jsonObject) throws Exception{
-
-
-        String url = "https://wxmall.topsports.com.cn/order/create";
         String body = "";
         //创建post方式请求对象
 
@@ -156,13 +178,13 @@ public class Sage {
         HttpPost httpPost = new HttpPost(url);
 
         //装填参数
-        StringEntity s = new StringEntity(jsonObject.toString(), "utf-8");
+        StringEntity s = new StringEntity(requestBody, "utf-8");
         //设置参数到请求对象中
         httpPost.setEntity(s);
         //设置header信息
-        httpPost.setHeader(":Host","wxmall.topsports.com.cn");
+        httpPost.setHeader(":Host","wxmall-lv.topsports.com.cn");
         httpPost.setHeader("Connection","keep-alive");
-        httpPost.setHeader("Authorization","6c82bc97-2e5e-421a-9dc0-6a6cb7fcc69e");
+        httpPost.setHeader("Authorization",token);
         httpPost.setHeader("User-Agent","Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36 MicroMessenger/7.0.9.501 NetType/WIFI MiniProgramEnv/Windows WindowsWechat");
         httpPost.setHeader("Referer", "https://servicewechat.com/wx71a6af1f91734f18/22/page-frame.html");
         httpPost.setHeader("Accept-Encoding","gzip, deflate, br");
@@ -179,20 +201,33 @@ public class Sage {
         EntityUtils.consume(entity);
         //释放链接
         response.close();
-        temp++;
         System.out.println(body);
         return body;
     }
 
 
+    private static String cartCode = "{\n" +
+            "    \"shopNo\":\"NKCQ54\",\n" +
+            "    \"productCode\":\"CV1753-101\",\n" +
+            "    \"productSkuNo\":\"20201130007910\",\n" +
+            "    \"productSizeCode\":\"6.5\",\n" +
+            "    \"productSkuId\":\"314fcf0410c04ab3a4c00ad491be699c\",\n" +
+            "    \"shopCommodityId\":\"99fa3572913e452fa8f0bdc197aed43b\",\n" +
+            "    \"brandNo\":\"NK\",\n" +
+            "    \"num\":1,\n" +
+            "    \"merchantNo\":\"TS\",\n" +
+            "    \"liveType\":0,\n" +
+            "    \"roomId\":\"\",\n" +
+            "    \"roomName\":\"\"\n" +
+            "}";
 
     private static String param = "{\n" +
             "    \"merchantNo\":\"TS\",\n" +
-            "    \"rid\":\"202011151614220b6ed9f5bea80eefe3\",\n" +
+            "    \"rid\":\"\",\n" +
             "    \"shippingId\":\"8a7a099774d3ca74017520de7a8a7a7d\",\n" +
             "    \"subOrderList\":[\n" +
             "        {\n" +
-            "            \"shopNo\":\"NKWA02\",\n" +
+            "            \"shopNo\":\"NKCQ54\",\n" +
             "            \"totalNum\":1,\n" +
             "            \"totalPrice\":null,\n" +
             "            \"virtualShopFlag\":0,\n" +
@@ -207,20 +242,22 @@ public class Sage {
             "\n" +
             "                    },\n" +
             "                    \"orderByClause\":null,\n" +
-            "                    \"shoppingcartId\":\"22775bab36f345e99788ee9b5a820801\",\n" +
+            "                    \"shoppingcartId\":\"198e1bbc1ccc42f99e2828a836c0555e\",\n" +
             "                    \"paterId\":null,\n" +
-            "                    \"productCode\":\"CT0978-600\",\n" +
-            "                    \"productNo\":\"20200708000342\",\n" +
+            "                    \"productCode\":\"CV1753-101\",\n" +
+            "                    \"productNo\":\"20200927001161\",\n" +
             "                    \"colorNo\":\"00\",\n" +
-            "                    \"sizeNo\":\"20160426000047\",\n" +
-            "                    \"sizeCode\":\"9.5\",\n" +
+            "                    \"colorName\":\"默认\",\n" +
+            "                    \"sizeNo\":\"20160426000041\",\n" +
+            "                    \"sizeCode\":\"6.5\",\n" +
+            "                    \"sizeEur\":\"39\",\n" +
             "                    \"brandDetailNo\":\"NK01\",\n" +
             "                    \"proNo\":null,\n" +
             "                    \"proName\":null,\n" +
             "                    \"assignProNo\":\"0\",\n" +
-            "                    \"skuId\":\"d99a13d830d44fe29ce786e734288069\",\n" +
-            "                    \"skuNo\":\"20200826003155\",\n" +
-            "                    \"shopCommodityId\":\"381a5d6c4a604ae8b9982bb952db7a81\",\n" +
+            "                    \"skuId\":\"314fcf0410c04ab3a4c00ad491be699c\",\n" +
+            "                    \"skuNo\":\"20201130007910\",\n" +
+            "                    \"shopCommodityId\":\"99fa3572913e452fa8f0bdc197aed43b\",\n" +
             "                    \"num\":1,\n" +
             "                    \"status\":3,\n" +
             "                    \"itemFlag\":0,\n" +
@@ -231,6 +268,7 @@ public class Sage {
             "                    \"liveType\":0,\n" +
             "                    \"roomId\":null,\n" +
             "                    \"roomName\":\"\",\n" +
+            "                    \"zoneQsLevel\":\"H\",\n" +
             "                    \"live_type\":0,\n" +
             "                    \"room_id\":\"\",\n" +
             "                    \"room_name\":\"\"\n" +
@@ -239,6 +277,12 @@ public class Sage {
             "            \"ticketCodes\":null,\n" +
             "            \"vipPrefAmount\":\"0.00\",\n" +
             "            \"prefAmount\":\"0.00\",\n" +
+            "            \"ticketDtos\":[\n" +
+            "\n" +
+            "            ],\n" +
+            "            \"unTicketDtos\":[\n" +
+            "\n" +
+            "            ],\n" +
             "            \"orderTickets\":null,\n" +
             "            \"ticketPresentDtos\":null,\n" +
             "            \"expressAmount\":\"0.00\",\n" +
@@ -251,9 +295,9 @@ public class Sage {
             "\n" +
             "    ],\n" +
             "    \"verificationType\":2,\n" +
-            "    \"validate\":\"360867c08bce2ff4978e57f78bc48a49\",\n" +
-            "    \"seccode\":\"360867c08bce2ff4978e57f78bc48a49|jordan\",\n" +
-            "    \"challenge\":\"9fa932aaaf1b535db0d231583f39229b\"\n" +
+            "    \"validate\":\"5c57ac04ffab573b7728e8056c6182d8\",\n" +
+            "    \"seccode\":\"5c57ac04ffab573b7728e8056c6182d8|jordan\",\n" +
+            "    \"challenge\":\"cb5955d2871affe931e4866e0cd1550a\"\n" +
             "}";
 
 }
